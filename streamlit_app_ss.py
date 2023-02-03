@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image
 from io import BytesIO
 import base64
+from streamlit_webrtc import webrtc_streamer
+import av
 
 #---------------------------------------------------------------------------------------
 # The SessionState class allows us to initialize and save variables across for across
@@ -74,46 +76,13 @@ def get_image_download_link(img, filename, text):
     return href
 
 
+class VideoFaceProcessor:
+    def recv(self, frame):
+        frame1 = frame.to_ndarray(format = "bgr24")
+        frame1 = cv2.flip(frame1, 1)
+        return av.VideoFrame.from_ndarray(frame1, format = "bgr24")
+
+
 net = load_model()
 
-if img_file_buffer is not None:
-    # Read the file and convert it to opencv Image.
-    raw_bytes = np.asarray(bytearray(img_file_buffer.read()), dtype=np.uint8)
-    # Loads image in a BGR channel order.
-    image = cv2.imdecode(raw_bytes, cv2.IMREAD_COLOR)
-
-    # Or use PIL Image (which uses an RGB channel order)
-    # image = np.array(Image.open(img_file_buffer))
-
-    # Create placeholders to display input and output images.
-    placeholders = st.columns(2)
-    # Display Input image in the first placeholder.
-    placeholders[0].image(image, channels='BGR')
-    placeholders[0].text("Input Image")
-
-    # Create a Slider and get the threshold from the slider.
-    conf_threshold = st.slider("SET Confidence Threshold", min_value=0.0, max_value=1.0, step=.01, value=0.5)
-
-    if USE_SS:
-        # Check if the loaded image is "new", if so call the face detection model function.
-        if img_file_buffer.id != ss.file_uploaded_id:
-            # Set the file_uploaded_id equal to the ID of the file that was just uploaded.
-            ss.file_uploaded_id = img_file_buffer.id
-            # Save the detections in the session-state data structure (ss) for future use
-            # with the current loaded image.
-            ss.detections = detectFaceOpenCVDnn(net, image)
-        # Process the detections based on the current confidence threshold.
-        out_image, _ = process_detections(image, ss.detections, conf_threshold=conf_threshold)
-    else:
-        detections = detectFaceOpenCVDnn(net, image)
-        out_image, _ = process_detections(image, detections, conf_threshold=conf_threshold)
-
-    # Display Detected faces.
-    placeholders[1].image(out_image, channels='BGR')
-    placeholders[1].text("Output Image")
-
-    # Convert opencv image to PIL.
-    out_image = Image.fromarray(out_image[:, :, ::-1])
-    # Create a link for downloading the output file.
-    st.markdown(get_image_download_link(out_image, "face_output.jpg", 'Download Output Image'),
-                unsafe_allow_html=True)
+webrtc_streamer("Web Streamer", video_processor_factory=VideoFaceProcessor)
