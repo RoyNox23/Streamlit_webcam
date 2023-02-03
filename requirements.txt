@@ -1,4 +1,6 @@
 numpy
 streamlit
+streamlit-webrtc
 opencv-python-headless
 pillow
+av
