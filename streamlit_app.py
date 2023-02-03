@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 from io import BytesIO
 import base64
+import av
 
 # Create application title and file uploader widget.
 st.title("OpenCV Deep Learning based Face Detection")
