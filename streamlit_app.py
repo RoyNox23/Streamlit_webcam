@@ -90,8 +90,8 @@ if img_file_buffer is not None:
     
     detections = detectFaceOpenCVDnn(net, image)
     
-    # Convert opencv image to PIL.
-    out_image = Image.fromarray(out_image[:, :, ::-1])
+    # Process the detections based on the current confidence threshold.
+    out_image, _ = process_detections(image, detections, conf_threshold=conf_threshold)
 
     # Display Detected faces.
     placeholders[1].image(out_image, channels='BGR')
