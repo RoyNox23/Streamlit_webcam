@@ -1,10 +1,10 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer
 import cv2
 import numpy as np
 from PIL import Image
 from io import BytesIO
 import base64
+from streamlit_webrtc import webrtc_streamer
 import av
 
 # Create application title and file uploader widget.
@@ -87,20 +87,11 @@ if img_file_buffer is not None:
 
     # Create a Slider and get the threshold from the slider.
     conf_threshold = st.slider("SET Confidence Threshold", min_value=0.0, max_value=1.0, step=.01, value=0.5)
-
-    if USE_SS:
-        # Check if the loaded image is "new", if so call the face detection model function.
-        if img_file_buffer.id != ss.file_uploaded_id:
-            # Set the file_uploaded_id equal to the ID of the file that was just uploaded.
-            ss.file_uploaded_id = img_file_buffer.id
-            # Save the detections in the session-state data structure (ss) for future use
-            # with the current loaded image.
-            ss.detections = detectFaceOpenCVDnn(net, image)
-        # Process the detections based on the current confidence threshold.
-        out_image, _ = process_detections(image, ss.detections, conf_threshold=conf_threshold)
-    else:
-        detections = detectFaceOpenCVDnn(net, image)
-        out_image, _ = process_detections(image, detections, conf_threshold=conf_threshold)
+    
+    detections = detectFaceOpenCVDnn(net, image)
+    
+    # Convert opencv image to PIL.
+    out_image = Image.fromarray(out_image[:, :, ::-1])
 
     # Display Detected faces.
     placeholders[1].image(out_image, channels='BGR')
@@ -108,6 +99,7 @@ if img_file_buffer is not None:
 
     # Convert opencv image to PIL.
     out_image = Image.fromarray(out_image[:, :, ::-1])
+    
     # Create a link for downloading the output file.
     st.markdown(get_image_download_link(out_image, "face_output.jpg", 'Download Output Image'),
                 unsafe_allow_html=True)
